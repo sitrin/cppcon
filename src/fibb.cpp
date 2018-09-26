@@ -18,7 +18,7 @@ coro_t::pull_type source(
         int first=1,second=1;
         sink(first);
         sink(second);
-        for(int i=0;i<8;++i){
+        while(true) {
             int third=first+second;
             first=second;
             second=third;
