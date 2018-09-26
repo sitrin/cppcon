@@ -1,12 +1,5 @@
 #include <iostream>
-#include <optional>
-#include <string>
-#include <vector>
-#include <algorithm>
-#include <iterator>
 #include <boost/coroutine2/all.hpp>
-//#include <boost/range/mutable_iterator.hpp>
-//#include <boost/range/const_iterator.hpp>
 
 int main() {
 
