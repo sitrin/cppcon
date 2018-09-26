@@ -5,7 +5,8 @@
 #include <algorithm>
 #include <iterator>
 #include <boost/coroutine2/all.hpp>
-
+//#include <boost/range/mutable_iterator.hpp>
+//#include <boost/range/const_iterator.hpp>
 
 
 int main() {
@@ -25,10 +26,15 @@ coro_t::pull_type source(
         }
     });
 
-for(auto i:source)
-    std::cout << i <<  " ";
+//for(auto i:source)
+//    std::cout << i <<  " ";
 	
- std::cout << "\n";
+
+for(size_t i=0; i<4 ; ++i) {
+	std::cout << i << ": " << source.get() << "\n";
+	source();
+}
+
 
  return 0;   
 
