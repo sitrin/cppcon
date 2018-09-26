@@ -8,35 +8,28 @@
 //#include <boost/range/mutable_iterator.hpp>
 //#include <boost/range/const_iterator.hpp>
 
-
 int main() {
 
-typedef boost::coroutines2::coroutine<int>   coro_t;
+  typedef boost::coroutines2::coroutine<size_t> coro_t;
 
-coro_t::pull_type source(
-    [&](coro_t::push_type& sink){
-        int first=1,second=1;
-        sink(first);
-        sink(second);
-        while(true) {
-            int third=first+second;
-            first=second;
-            second=third;
-            sink(third);
-        }
-    });
+  coro_t::pull_type source([&](coro_t::push_type &sink) {
+    size_t first = 1, second = 1;
+    sink(first);
+    sink(second);
+    while (true) {
+      size_t third = first + second;
+      first = second;
+      second = third;
+      sink(third);
+    }
+  });
 
-//for(auto i:source)
-//    std::cout << i <<  " ";
-	
+  for (size_t i = 0; i < 4; ++i) {
+    std::cout << source.get() << " ";
+    source();
+  }
 
-for(size_t i=0; i<4 ; ++i) {
-	std::cout << i << ": " << source.get() << "\n";
-	source();
+  std::cout << "\n";
+
+  return 0;
 }
-
-
- return 0;   
-
-}
-
