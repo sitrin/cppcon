@@ -8,4 +8,4 @@ if(Boost_FOUND)
   add_executable(fibb fibb.cpp)
   TARGET_LINK_LIBRARIES(fibb ${MANDATORY_LIBRARIES} boost_coroutine boost_context)
 endif()
-
+add_executable(threaded threaded.cpp)
