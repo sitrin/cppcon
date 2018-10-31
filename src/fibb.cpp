@@ -4,9 +4,9 @@
 int main() {
 
   typedef boost::coroutines2::coroutine<size_t> coro_t;
+    size_t first = 1, second = 1;
 
   coro_t::pull_type source([&](coro_t::push_type &yield) {
-    size_t first = 1, second = 1;
     //yield(first);
     //yield(second);
     while (true) {
