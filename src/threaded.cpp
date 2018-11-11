@@ -8,50 +8,56 @@
 #include <thread>
 #include <vector>
 
-std::mutex mtx;
-
-inline void clearline(std::ostream &os) {
-      os << "\r                                                           \r";
+void non_threadsafe_increment_array(std::array<size_t, 10> &a) {
+  for (size_t i = 0; i < 100'000; ++i) {
+      for(auto& item : a) ++item;
+  }
 }
 
-void printarray(const std::array<int, 10> &a, std::ostream &os) {
-	clearline(os);
-	os << "\t";
-        std::copy(a.begin(), a.end(), std::ostream_iterator<int>(std::cout, " "));
-	os.flush();
+void threadsafe_increment_array(std::array<size_t, 10> &a) {
+  static std::mutex mtx;
+  for (size_t i = 0; i < 100'000; ++i) {
+      std::scoped_lock lock(mtx);
+      for(auto& item : a) ++item;
+  }
 }
 
-void update_array(std::array<int, 10>& array_of_ints, std::ostream &os, size_t index) {
-	for(size_t i=0; i<9; ++i) {
-		{
-			{
-				std::scoped_lock lock(mtx);
-				array_of_ints[index]++;
-				printarray(array_of_ints, os);	
-			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(100*index));
-		}
-	}
-}
-	
 int main() {
 
-  std::cout << "\n";
+  constexpr size_t NUM_THREADS = 13;
 
-  std::array<int, 10> array_of_ints = { {0,0,0,0,0,0,0,0,0,0 } };
-
+  std::array<size_t, 10> array_of_counters = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
   std::vector<std::thread> vec_of_threads;
 
-  for(size_t i=0; i<array_of_ints.size(); ++i) {
-	vec_of_threads.emplace_back(update_array, std::ref(array_of_ints), std::ref(std::cout), i);
+  auto start = std::chrono::system_clock::now();
+  for (size_t i = 0; i < NUM_THREADS; ++i) {
+    vec_of_threads.emplace_back(non_threadsafe_increment_array, std::ref(array_of_counters));
   }
 
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  for (auto &thread : vec_of_threads)
+    thread.join();
+  std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - start;
 
-       for (auto &thread : vec_of_threads) thread.join();
-  std::cout << "\n\n";
+  std::cout << "\n";
+  std::copy(array_of_counters.begin(), array_of_counters.end(), std::ostream_iterator<size_t>(std::cout, " "));
+  std::cout << "\n\nElapsed seconds (not threadsafe): " << elapsed_seconds.count() << "\n\n";
 
+  // clear thread vector and counter arrays
+  vec_of_threads.clear();
+  std::fill_n(array_of_counters.begin(), array_of_counters.size(), 0);
+
+  start = std::chrono::system_clock::now();
+  for (size_t i = 0; i < NUM_THREADS; ++i) {
+    vec_of_threads.emplace_back(threadsafe_increment_array, std::ref(array_of_counters));
+  }
+
+  for (auto &thread : vec_of_threads)
+    thread.join();
+  elapsed_seconds = std::chrono::system_clock::now() - start;
+
+  std::cout << "\n";
+  std::copy(array_of_counters.begin(), array_of_counters.end(), std::ostream_iterator<size_t>(std::cout, " "));
+  std::cout << "\n\nElapsed seconds (threadsafe): " << elapsed_seconds.count() << "\n\n";
 
   return 0;
 }
